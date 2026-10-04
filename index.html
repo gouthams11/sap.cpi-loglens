@@ -835,6 +835,120 @@
     }
 
     /* ---------- Feature Sequence ---------- */
+    .features-sec-head {
+      position: relative;
+      width: 100%;
+      max-width: none;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 28px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .features-sec-head-copy {
+      min-width: 0;
+      pointer-events: none;
+    }
+
+    .feature-toggle {
+      position: static;
+      width: 36px;
+      height: 36px;
+      margin: 0 0 2px auto;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 36px;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink-2);
+      box-shadow: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      z-index: 1;
+    }
+
+    .feature-toggle .feature-toggle-icon {
+      width: 16px;
+      height: 16px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 240ms cubic-bezier(.22, 1, .36, 1), color 120ms var(--ease);
+      pointer-events: none;
+    }
+
+    @media (hover: hover) {
+      .feature-toggle:hover {
+        background: var(--bg-sunken);
+        border-color: var(--line-strong);
+        color: var(--ink);
+      }
+    }
+
+    .feature-toggle:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+
+    .feature-toggle[aria-expanded="true"] .feature-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .features-sec-head:active .feature-toggle-icon,
+    .feature-toggle:active .feature-toggle-icon {
+      transform: rotate(0deg) scale(.96);
+    }
+
+    .features-sec-head:active .feature-toggle {
+      background: var(--bg-sunken);
+      border-color: var(--line-strong);
+    }
+
+    .features-sec-head:active .feature-toggle[aria-expanded="true"] .feature-toggle-icon,
+    .feature-toggle[aria-expanded="true"]:active .feature-toggle-icon {
+      transform: rotate(180deg) scale(.96);
+    }
+
+    .features-collapse {
+      display: grid;
+      grid-template-rows: 0fr;
+      opacity: 0;
+      overflow: hidden;
+      transition:
+        grid-template-rows 360ms cubic-bezier(.22, 1, .36, 1),
+        opacity 180ms ease-out;
+      will-change: grid-template-rows, opacity;
+    }
+
+    .features-collapse > .feature-sequence {
+      min-height: 0;
+      overflow: hidden;
+      transform: translateY(-8px);
+      transition: transform 360ms cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .features-collapse.is-open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+    }
+
+    .features-collapse.is-open > .feature-sequence {
+      transform: translateY(0);
+    }
+
     .feature-sequence {
       list-style: none;
       margin: 0;
@@ -908,7 +1022,36 @@
       }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      .features-collapse,
+      .features-collapse > .feature-sequence,
+      .feature-toggle-icon {
+        transition: none !important;
+      }
+
+      .features-collapse {
+        opacity: 1;
+      }
+
+      .features-collapse > .feature-sequence {
+        transform: none !important;
+      }
+
+      .features-collapse:not(.is-open) {
+        display: none;
+      }
+    }
+
     @media (max-width: 640px) {
+      .features-sec-head {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+      }
+
+      .feature-toggle {
+        padding-bottom: 1px;
+      }
+
       .feature-sequence-item {
         grid-template-columns: 34px minmax(0, 1fr);
         gap: 14px;
@@ -1559,9 +1702,11 @@
     }
 
     .faq summary {
+      position: relative;
       list-style: none;
       cursor: pointer;
-      padding: 22px 0;
+      min-height: 60px;
+      padding: 20px 0;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -1570,11 +1715,29 @@
       font-weight: 600;
       letter-spacing: -0.01em;
       color: var(--ink);
-      transition: color 0.15s var(--ease);
+      background: transparent;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+      transition: color 140ms var(--ease), background-color 140ms var(--ease);
     }
 
-    .faq summary:hover {
-      color: var(--accent);
+    @media (hover: hover) and (pointer: fine) {
+      .faq summary:hover {
+        color: var(--accent);
+      }
+    }
+
+    .faq summary:active {
+      color: var(--ink);
+      background: var(--bg-sunken);
+    }
+
+    .faq summary:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 3px;
+      border-radius: var(--radius-xs);
     }
 
     .faq summary::-webkit-details-marker {
@@ -1586,6 +1749,7 @@
       width: 18px;
       height: 18px;
       position: relative;
+      pointer-events: none;
     }
 
     .faq summary .plus::before,
@@ -1631,6 +1795,14 @@
       padding: 2px 7px;
       border-radius: var(--radius-xs);
       border: 1px solid var(--line);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .faq summary,
+      .faq summary .plus::before,
+      .faq summary .plus::after {
+        transition: none !important;
+      }
     }
 
     /* ---------- Footer ---------- */
@@ -2219,8 +2391,21 @@
         justify-content: center;
       }
 
+      .btn-row {
+        flex-wrap: wrap;
+      }
+
       .btn-row .btn {
+        min-width: 0;
         flex: 1 1 auto;
+      }
+
+      @media (max-width: 360px) {
+        .btn-row .btn {
+          width: 100%;
+          max-width: 100%;
+          flex: 1 1 100%;
+        }
       }
 
       /* Permission table converts to card rows */
@@ -2502,13 +2687,28 @@
     <!-- ============ FEATURES ============ -->
     <section class="sec sec-tint" id="features" aria-labelledby="features-title">
       <div class="wrap">
-        <div class="sec-head rv">
-          <p class="eyebrow">Features</p>
-          <h2 id="features-title">What CPI LogLens Can Do</h2>
-          <p>The main capabilities in CPI LogLens, in the order you use them.</p>
+        <div class="sec-head features-sec-head rv">
+          <div class="features-sec-head-copy">
+            <p class="eyebrow">Features</p>
+            <h2 id="features-title">What CPI LogLens Can Do</h2>
+            <p>The main capabilities in CPI LogLens, in the order you use them.</p>
+          </div>
+          <button
+            class="ibtn feature-toggle"
+            id="featureToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="featureSequence"
+            aria-label="Expand features"
+            title="Expand features">
+            <svg class="feature-toggle-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="m7 9 5 5 5-5" />
+            </svg>
+          </button>
         </div>
 
-        <ol class="feature-sequence">
+        <div class="features-collapse" id="featureSequence" aria-hidden="true" inert>
+          <ol class="feature-sequence">
           <li class="feature-sequence-item rv">
             <span class="feature-sequence-number">01</span>
             <div class="feature-sequence-content">
@@ -2685,7 +2885,8 @@
             </div>
             <span class="feature-sequence-tag">Diagnostics</span>
           </li>
-        </ol>
+          </ol>
+        </div>
       </div>
     </section>
 
@@ -3439,6 +3640,62 @@
           document.addEventListener("visibilitychange", function () { if (document.hidden) setPlaying(false); });
         }
       }
+
+      /* ---------------- Features Expand / Collapse ---------------- */
+      (function () {
+        var toggle = document.getElementById("featureToggle");
+        var panel = document.getElementById("featureSequence");
+        if (!toggle || !panel) return;
+
+        var reducedMotion = window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)");
+
+        function setFeatureState(open, instant) {
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.setAttribute("aria-label", open ? "Collapse features" : "Expand features");
+          toggle.setAttribute("title", open ? "Collapse features" : "Expand features");
+          panel.setAttribute("aria-hidden", String(!open));
+          panel.inert = !open;
+
+          if (instant) {
+            panel.style.transition = "none";
+            panel.classList.toggle("is-open", open);
+            panel.offsetHeight;
+            panel.style.transition = "";
+          } else {
+            panel.classList.toggle("is-open", open);
+          }
+        }
+
+        toggle.addEventListener("click", function () {
+          var open = toggle.getAttribute("aria-expanded") === "true";
+          setFeatureState(!open, Boolean(reducedMotion && reducedMotion.matches));
+        });
+
+        var header = toggle.closest(".features-sec-head");
+        if (header) {
+          header.addEventListener("click", function (event) {
+            if (event.target.closest("#featureToggle")) return;
+            toggle.click();
+          });
+
+          header.addEventListener("keydown", function (event) {
+            if (event.target.closest("#featureToggle")) return;
+            if (event.key === " " || event.key === "Enter") {
+              event.preventDefault();
+              toggle.click();
+            }
+          });
+        }
+
+        setFeatureState(false, true);
+
+        if (reducedMotion) {
+          reducedMotion.addEventListener("change", function () {
+            if (reducedMotion.matches) setFeatureState(toggle.getAttribute("aria-expanded") === "true", true);
+          });
+        }
+      })();
 
       /* ---------------- Reveal On Scroll ---------------- */
       var revealEls = Array.prototype.slice.call(document.querySelectorAll(".rv"));
