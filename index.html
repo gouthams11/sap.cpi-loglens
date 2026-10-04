@@ -2066,11 +2066,41 @@
       animation: lbfade 0.24s var(--ease);
     }
 
-    .theming,
-    .theming *,
-    .theming *::before,
-    .theming *::after {
-      transition: background-color 0.25s var(--ease), color 0.25s var(--ease), border-color 0.25s var(--ease) !important;
+    /* Theme switching: avoid animating every descendant. The previous global
+       transition rule forced a large repaint/recalculation across the whole page
+       on every toggle. Use one lightweight composited overlay instead. */
+    html.theme-switching *,
+    html.theme-switching *::before,
+    html.theme-switching *::after {
+      /* Theme colors change atomically beneath the overlay. Disabling component
+         transitions for this brief interval prevents dozens of independent
+         color/background/border animations from competing for the main thread. */
+      transition: none !important;
+    }
+
+    .theme-transition-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483646;
+      pointer-events: none;
+      opacity: 1;
+      transform: translateZ(0);
+      will-change: opacity;
+      contain: paint;
+      animation: theme-fade-out 180ms var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1)) forwards;
+    }
+
+    .theme-transition-layer.from-light {
+      background: #ffffff;
+    }
+
+    .theme-transition-layer.from-dark {
+      background: #0b0e12;
+    }
+
+    @keyframes theme-fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3266,9 +3296,34 @@
       applyThemeMeta();
       if (themeBtn) {
         themeBtn.addEventListener("click", function () {
-          root.classList.add("theming"); setTimeout(function () { root.classList.remove("theming"); }, 350);
-          root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-          try { localStorage.setItem("cpi-loglens-theme", root.dataset.theme); } catch (e) { }
+          var current = root.dataset.theme === "dark" ? "dark" : "light";
+          var next = current === "dark" ? "light" : "dark";
+          var reduced = false;
+          try { reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch (e) { }
+
+          /* Switch the theme immediately, then soften the visual change with one
+             composited overlay. This avoids the previous global descendant
+             transition, which could make the page feel hung on larger screens. */
+          var layer = null;
+          if (!reduced) {
+            /* Keep at most one transition layer. This makes rapid double-taps
+               deterministic instead of stacking overlays. */
+            document.querySelectorAll(".theme-transition-layer").forEach(function (el) { el.remove(); });
+            root.classList.add("theme-switching");
+            layer = document.createElement("div");
+            layer.className = "theme-transition-layer from-" + current;
+            layer.setAttribute("aria-hidden", "true");
+            document.body.appendChild(layer);
+            layer.addEventListener("animationend", function () {
+              if (layer && layer.parentNode) layer.parentNode.removeChild(layer);
+              root.classList.remove("theme-switching");
+            }, { once: true });
+          } else {
+            root.classList.remove("theme-switching");
+          }
+
+          root.dataset.theme = next;
+          try { localStorage.setItem("cpi-loglens-theme", next); } catch (e) { }
           applyThemeMeta();
         });
       }
