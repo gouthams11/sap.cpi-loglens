@@ -2139,6 +2139,27 @@
     }
 
     /* ---------- Mobile Navigation Sheet ---------- */
+    /* Lock the document without changing the viewport's scroll container.
+       The normal header remains sticky when the menu is closed; while the
+       menu is open it becomes fixed so the trigger/header cannot drift away
+       if a browser tries to adjust scroll during touch/overscroll. */
+    body.menu-open {
+      position: fixed;
+      left: 0;
+      right: 0;
+      width: 100%;
+      overflow: hidden !important;
+      overscroll-behavior: none;
+    }
+
+    body.menu-open > .hdr {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+    }
+
     .nav-sheet {
       position: fixed;
       inset: calc(60px + env(safe-area-inset-top, 0px)) 0 0 0;
@@ -2149,6 +2170,8 @@
       flex-direction: column;
       gap: 4px;
       overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-sheet.open {
@@ -3711,24 +3734,69 @@
 
       /* ---------------- Mobile Navigation ---------------- */
       var menuBtn = $("menuBtn"), sheet = $("navSheet");
-      var previousBodyOverflow = "";
+      var previousBodyStyles = null;
+      var menuScrollY = 0;
+
       function setMenu(open) {
         if (!sheet) return;
-        sheet.classList.toggle("open", open);
+        var currentlyOpen = sheet.classList.contains("open");
+        if (open === currentlyOpen) return;
+
+        if (open) {
+          menuScrollY = window.scrollY || window.pageYOffset || 0;
+          previousBodyStyles = {
+            overflow: document.body.style.overflow,
+            position: document.body.style.position,
+            top: document.body.style.top,
+            left: document.body.style.left,
+            right: document.body.style.right,
+            width: document.body.style.width,
+            paddingRight: document.body.style.paddingRight
+          };
+
+          var scrollbarGap = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+          document.body.classList.add("menu-open");
+          document.body.style.top = (-menuScrollY) + "px";
+          document.body.style.paddingRight = scrollbarGap ? (scrollbarGap + "px") : "";
+
+          sheet.classList.add("open");
+        } else {
+          sheet.classList.remove("open");
+          document.body.classList.remove("menu-open");
+
+          if (previousBodyStyles) {
+            document.body.style.overflow = previousBodyStyles.overflow;
+            document.body.style.position = previousBodyStyles.position;
+            document.body.style.top = previousBodyStyles.top;
+            document.body.style.left = previousBodyStyles.left;
+            document.body.style.right = previousBodyStyles.right;
+            document.body.style.width = previousBodyStyles.width;
+            document.body.style.paddingRight = previousBodyStyles.paddingRight;
+            previousBodyStyles = null;
+          }
+
+          /* Restore the exact scroll position without honoring the page-wide
+             smooth-scroll preference. Re-entry should feel instantaneous and
+             must not animate the whole page after a menu dismissal. */
+          var rootStyle = document.documentElement.style;
+          var previousScrollBehavior = rootStyle.scrollBehavior;
+          rootStyle.scrollBehavior = "auto";
+          window.scrollTo(0, menuScrollY);
+          rootStyle.scrollBehavior = previousScrollBehavior;
+        }
+
         if (menuBtn) {
           menuBtn.setAttribute("aria-expanded", String(open));
           menuBtn.setAttribute("aria-label", open ? "Close Menu" : "Open Menu");
           menuBtn.title = open ? "Close Menu" : "Open Menu";
         }
-        if (open) {
-          previousBodyOverflow = document.body.style.overflow;
-          document.body.style.overflow = "hidden";
-        } else {
-          document.body.style.overflow = previousBodyOverflow;
-        }
+
+        sheet.setAttribute("aria-hidden", String(!open));
+
         var mu = menuBtn && menuBtn.querySelector("use");
         if (mu) mu.setAttribute("href", open ? "#i-close" : "#i-menu");
       }
+      if (sheet) sheet.setAttribute("aria-hidden", "true");
       if (menuBtn) {
         menuBtn.addEventListener("click", function () { setMenu(!sheet.classList.contains("open")); });
       }
@@ -3746,7 +3814,7 @@
           setMenu(false);
         }
       });
-      var menuBreakpoint = window.matchMedia("(max-width: 960px)");
+      var menuBreakpoint = window.matchMedia("(max-width: 1150px)");
       if (menuBreakpoint.addEventListener) {
         menuBreakpoint.addEventListener("change", function (e) {
           if (!e.matches) setMenu(false);
