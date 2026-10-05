@@ -193,7 +193,9 @@
       -webkit-text-size-adjust: 100%;
       scroll-behavior: smooth;
       scroll-padding-top: 80px;
-      overflow-x: hidden;
+      /* Clip horizontal overflow without creating a scroll container.
+         This keeps the viewport as the sticky header's scrollport. */
+      overflow-x: clip;
       width: 100%;
     }
 
@@ -228,7 +230,9 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
-      overflow-x: hidden;
+      /* Do not use overflow-x: hidden here: it creates a scroll container
+         in Chromium and prevents the top-level sticky header from sticking. */
+      overflow-x: clip;
       width: 100%;
     }
 
